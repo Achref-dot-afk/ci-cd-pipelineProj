@@ -8,12 +8,7 @@ pipeline {
         stage("Build the Docker Image") {
             steps {
                 script {
-                    try {
-                        sh "docker build -t docker.io/achref2h/static-app:v1 -f Dockerfile ./'Practise third attempt'"
-                    } catch (Exception buildError) {
-                        currentBuild.result = 'FAILURE'
-                        error("Failed to build the Docker image: ${buildError.message}")
-                    }
+                    sh "docker build -t docker.io/achref2h/static-app:v1 -f Dockerfile . "
                 }
             }
         }
@@ -21,14 +16,9 @@ pipeline {
         stage("Login and Push to Docker Hub") {
             steps {
                 script {
-                    try {
-                        withCredentials([usernamePassword(credentialsId: CREDENTIALS, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                            sh "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
-                            sh "docker push docker.io/achref2h/static-app:v1"
-                        }
-                    } catch (Exception loginPushError) {
-                        currentBuild.result = 'FAILURE'
-                        error("Failed to log in and push to Docker Hub: ${loginPushError.message}")
+                    withCredentials([usernamePassword(credentialsId: CREDENTIALS, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
+                        sh "docker push docker.io/achref2h/static-app:v1"
                     }
                 }
             }
