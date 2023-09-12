@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+    environment {
+        CREDENTIALS = credentials('achref2h/******')
+    }
+
+    stages {
+        stage("Build the Docker Image") {
+            steps {
+                script {
+                    try {
+                        sh "docker build -t docker.io/your-username/static-app:v1 ."
+                    } catch (Exception buildError) {
+                        currentBuild.result = 'FAILURE'
+                        error("Failed to build the Docker image: ${buildError.message}")
+                    }
+                }
+            }
+        }
+        
+        stage("Login and Push to Docker Hub") {
+            steps {
+                script {
+                    try {
+                        withCredentials([usernamePassword(credentialsId: CREDENTIALS, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                            sh "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
+                            sh "docker push docker.io/your-username/static-app:v1"
+                        }
+                    } catch (Exception loginPushError) {
+                        currentBuild.result = 'FAILURE'
+                        error("Failed to log in and push to Docker Hub: ${loginPushError.message}")
+                    }
+                }
+            }
+        }
+        stage("Deploy to k8s") {
+            steps {
+                sh "minikube start"
+                sh "kubectl create deployment my-app-deployment --image=docker.io/achref2h/static-app:v1 --replicas=3 --port=80"
+                sh "kubectl expose deployment my-app-deployment --type=NodePort --name=my-nodeport-service --port=80 --target-port=80"
+            }
+        }
+    }
+}
