@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        CREDENTIALS = credentials('achref2h/******')
+        CREDENTIALS = credentials('9dffe2e7-f3fb-4259-b72b-f6694ada5b54')
     }
 
     stages {
